@@ -1,0 +1,9 @@
+[
+  {
+    "uuid": "b3fb3d0e-6a8b-4c9e-9c4f-0c1e2a3b4c5d",
+    "url": "https://stream.example.com/",
+    "statusurl": "https://stream.example.com/status-json.xsl",
+    "status": "OK",
+    "error": null
+  }
+]

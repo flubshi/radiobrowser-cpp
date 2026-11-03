@@ -1,0 +1,51 @@
+name: Docs
+
+# Builds the API documentation with Doxygen for pull requests and pushes to
+# main; undocumented public API or broken references fail the build.
+# Publishing to GitHub Pages happens for releases and manual runs; enable it
+# once under Settings > Pages > Source: "GitHub Actions".
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Doxygen
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends doxygen graphviz
+      - name: Generate documentation
+        run: |
+          mkdir -p build/docs
+          doxygen docs/Doxyfile
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
+        with:
+          path: build/docs/html
+
+  deploy:
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

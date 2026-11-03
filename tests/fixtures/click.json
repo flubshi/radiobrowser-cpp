@@ -1,0 +1,7 @@
+{
+  "ok": "true",
+  "message": "retrieved station url",
+  "stationuuid": "960e57c5-0601-11e8-ae97-52543be04c81",
+  "name": "Example Jazz Radio",
+  "url": "https://stream.example.com/jazz_128.mp3"
+}

@@ -1,0 +1,23 @@
+name: Release
+
+# Opens and updates a release pull request from Conventional Commits on main.
+# Merging that pull request tags the release and creates the GitHub release.
+# Requires: Settings > Actions > General > "Allow GitHub Actions to create and
+# approve pull requests".
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json

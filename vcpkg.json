@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "description": "Dependencies for building radiobrowser-cpp with vcpkg (used by the Windows CI job).",
+  "dependencies": [
+    "curl",
+    "nlohmann-json"
+  ],
+  "features": {
+    "tests": {
+      "description": "Dependencies of the unit tests",
+      "dependencies": [
+        "gtest"
+      ]
+    }
+  }
+}

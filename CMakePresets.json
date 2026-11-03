@@ -1,0 +1,98 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": { "major": 3, "minor": 21, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "installDir": "${sourceDir}/install/${presetName}"
+    },
+    {
+      "name": "dev",
+      "displayName": "Development (Debug, warnings as errors)",
+      "inherits": "base",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "RADIOBROWSER_WARNINGS_AS_ERRORS": "ON"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release",
+      "inherits": "base",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "tidy",
+      "displayName": "clang-tidy (library only)",
+      "inherits": "base",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "RADIOBROWSER_CLANG_TIDY": "ON",
+        "RADIOBROWSER_WARNINGS_AS_ERRORS": "ON",
+        "RADIOBROWSER_BUILD_TESTS": "OFF",
+        "RADIOBROWSER_BUILD_EXAMPLES": "OFF"
+      }
+    },
+    {
+      "name": "live",
+      "displayName": "Live API tests",
+      "inherits": "base",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "RADIOBROWSER_BUILD_TESTS": "OFF",
+        "RADIOBROWSER_BUILD_EXAMPLES": "OFF",
+        "RADIOBROWSER_BUILD_LIVE_TESTS": "ON"
+      }
+    },
+    {
+      "name": "windows-vcpkg",
+      "displayName": "Windows (MSVC + vcpkg)",
+      "inherits": "base",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "architecture": { "value": "x64", "strategy": "set" },
+      "cacheVariables": {
+        "VCPKG_MANIFEST_FEATURES": "tests",
+        "RADIOBROWSER_WARNINGS_AS_ERRORS": "ON"
+      },
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "dev", "configurePreset": "dev" },
+    { "name": "release", "configurePreset": "release" },
+    { "name": "tidy", "configurePreset": "tidy" },
+    { "name": "live", "configurePreset": "live" },
+    { "name": "windows-vcpkg", "configurePreset": "windows-vcpkg", "configuration": "Release" }
+  ],
+  "testPresets": [
+    {
+      "name": "dev",
+      "configurePreset": "dev",
+      "output": { "outputOnFailure": true },
+      "filter": { "include": { "label": "unit" } }
+    },
+    {
+      "name": "live",
+      "configurePreset": "live",
+      "output": { "outputOnFailure": true },
+      "filter": { "include": { "label": "live" } }
+    },
+    {
+      "name": "windows-vcpkg",
+      "configurePreset": "windows-vcpkg",
+      "configuration": "Release",
+      "output": { "outputOnFailure": true },
+      "filter": { "include": { "label": "unit" } }
+    }
+  ]
+}

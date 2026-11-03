@@ -1,0 +1,32 @@
+[
+  {
+    "stationuuid": "960e57c5-0601-11e8-ae97-52543be04c81",
+    "checkuuid": "18be4561-309a-11ea-b37a-0242ac120002",
+    "source": "at1.api.radio-browser.info",
+    "codec": "MP3",
+    "bitrate": 128,
+    "hls": 0,
+    "ok": 1,
+    "timestamp": "2020-01-06 15:34:58",
+    "timestamp_iso8601": "2020-01-06T15:34:58Z",
+    "urlcache": "http://stream.example.com/mp3_128",
+    "metainfo_overrides_database": 0,
+    "public": null,
+    "name": null,
+    "description": null,
+    "tags": null,
+    "countrycode": null,
+    "countrysubdivisioncode": null,
+    "homepage": null,
+    "favicon": null,
+    "loadbalancer": null,
+    "do_not_index": 1,
+    "server_software": "Icecast 2.4.0",
+    "sampling": 44100,
+    "timing_ms": 125,
+    "languagecodes": "de,en",
+    "ssl_error": 0,
+    "geo_lat": null,
+    "geo_long": null
+  }
+]

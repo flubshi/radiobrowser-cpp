@@ -1,0 +1,32 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: Minimal code or steps. Include the Error code and message if a call failed.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: radiobrowser-cpp version
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Platform, compiler and transport
+      placeholder: Ubuntu 24.04, GCC 13, CurlTransport
+    validations:
+      required: true

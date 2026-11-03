@@ -1,0 +1,12 @@
+[
+  {
+    "stepuuid": "0b1c2d3e-0000-4000-8000-000000000001",
+    "parent_stepuuid": null,
+    "checkuuid": "18be4561-309a-11ea-b37a-0242ac120002",
+    "stationuuid": "960e57c5-0601-11e8-ae97-52543be04c81",
+    "url": "http://stream.example.com/jazz.pls",
+    "urltype": "PLS",
+    "error": null,
+    "creation_iso8601": "2026-10-30T18:16:30Z"
+  }
+]

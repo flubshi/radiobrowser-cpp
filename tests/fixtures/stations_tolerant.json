@@ -1,0 +1,32 @@
+[
+  {
+    "stationuuid": "aaaaaaaa-0000-0000-0000-000000000001",
+    "name": "Strings Everywhere",
+    "url": "https://example.net/stream",
+    "tags": ["rock", " pop ", "", 42],
+    "language": ["english"],
+    "votes": "17",
+    "bitrate": "192.0",
+    "hls": "true",
+    "lastcheckok": "1",
+    "clickcount": 9.0,
+    "clicktrend": "-2",
+    "ssl_error": false,
+    "geo_lat": "48.137",
+    "geo_long": "11.575",
+    "has_extended_info": "no",
+    "lastchangetime_iso8601": "not a date",
+    "lastchangetime": "2024-02-29 23:59:59"
+  },
+  "this is not an object",
+  42,
+  null,
+  {
+    "stationuuid": "aaaaaaaa-0000-0000-0000-000000000002",
+    "votes": "many",
+    "bitrate": true,
+    "hls": "maybe",
+    "geo_lat": "north",
+    "unknown_field": {"nested": [1, 2, 3]}
+  }
+]

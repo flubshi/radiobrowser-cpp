@@ -1,0 +1,169 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  LINUX_PACKAGES: >-
+    ninja-build pkg-config libcurl4-openssl-dev nlohmann-json3-dev libgtest-dev libgmock-dev
+
+jobs:
+  format:
+    name: clang-format
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install clang-format
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends clang-format-18
+      - name: Check formatting
+        run: git ls-files '*.hpp' '*.cpp' | xargs clang-format-18 --dry-run --Werror
+
+  clang-tidy:
+    name: clang-tidy
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang-18 clang-tidy-18 $LINUX_PACKAGES
+      - name: Configure
+        run: >-
+          cmake -S . -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_CXX_COMPILER=clang++-18
+          -DRADIOBROWSER_CLANG_TIDY=ON
+          -DRADIOBROWSER_WARNINGS_AS_ERRORS=ON
+          -DRADIOBROWSER_BUILD_TESTS=OFF
+          -DRADIOBROWSER_BUILD_EXAMPLES=OFF
+      - name: Build with clang-tidy
+        run: cmake --build build
+
+  linux:
+    name: Linux ${{ matrix.name }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: GCC Debug
+            cxx: g++
+            build_type: Debug
+            cmake_args: ""
+          - name: GCC Release shared
+            cxx: g++
+            build_type: Release
+            cmake_args: -DBUILD_SHARED_LIBS=ON
+          - name: Clang Release
+            cxx: clang++-18
+            build_type: Release
+            cmake_args: ""
+          - name: GCC without libcurl
+            cxx: g++
+            build_type: Debug
+            cmake_args: -DRADIOBROWSER_WITH_CURL=OFF
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang-18 $LINUX_PACKAGES
+      - name: Configure
+        run: >-
+          cmake -S . -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+          -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install
+          -DRADIOBROWSER_WARNINGS_AS_ERRORS=ON
+          ${{ matrix.cmake_args }}
+      - name: Build
+        run: cmake --build build --parallel
+      - name: Unit tests
+        run: ctest --test-dir build --label-regex unit --output-on-failure --parallel 4
+      - name: Install
+        run: cmake --install build
+      - name: Consumer via find_package (C++17)
+        run: |
+          cmake -S tests/consumer -B consumer-installed -G Ninja \
+            -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
+            -DCMAKE_PREFIX_PATH=${{ github.workspace }}/install
+          cmake --build consumer-installed
+          ctest --test-dir consumer-installed --output-on-failure
+      - name: Consumer via add_subdirectory (C++17)
+        run: |
+          cmake -S tests/consumer -B consumer-subdir -G Ninja \
+            -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
+            -DRADIOBROWSER_SOURCE_DIR=${{ github.workspace }} \
+            ${{ matrix.cmake_args }}
+          cmake --build consumer-subdir
+          ctest --test-dir consumer-subdir --output-on-failure
+      - name: Consumer via pkg-config (C++17)
+        run: |
+          PKG_CONFIG_PATH="$(dirname "$(find "${{ github.workspace }}/install" -name radiobrowser.pc)")"
+          export PKG_CONFIG_PATH
+          # shellcheck disable=SC2046 # word splitting of the flags is intended
+          ${{ matrix.cxx }} -std=c++17 tests/consumer/main.cpp -o consumer-pkgconfig \
+            $(pkg-config --cflags --libs radiobrowser)
+          LD_LIBRARY_PATH="$(pkg-config --variable=libdir radiobrowser)" ./consumer-pkgconfig
+
+  windows:
+    name: Windows MSVC
+    runs-on: windows-latest
+    env:
+      VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}\vcpkg-cache,readwrite
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore vcpkg binary cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}\vcpkg-cache
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
+          restore-keys: vcpkg-${{ runner.os }}-
+      - name: Prepare vcpkg binary cache
+        shell: pwsh
+        run: New-Item -ItemType Directory -Force -Path "${{ github.workspace }}\vcpkg-cache" | Out-Null
+      - name: Configure
+        shell: pwsh
+        run: >-
+          cmake -S . -B build -A x64
+          -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+          -DVCPKG_MANIFEST_FEATURES=tests
+          -DRADIOBROWSER_WARNINGS_AS_ERRORS=ON
+      - name: Build
+        run: cmake --build build --config Release --parallel
+      - name: Unit tests
+        run: ctest --test-dir build -C Release --label-regex unit --output-on-failure --parallel 4
+
+  live:
+    # Talks to the real API. Informational only: an outage of the public
+    # service must not block pull requests. Never counts clicks or votes.
+    name: Live API tests (non-blocking)
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends $LINUX_PACKAGES
+      - name: Configure
+        run: >-
+          cmake -S . -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=Debug
+          -DRADIOBROWSER_BUILD_TESTS=OFF
+          -DRADIOBROWSER_BUILD_EXAMPLES=OFF
+          -DRADIOBROWSER_BUILD_LIVE_TESTS=ON
+      - name: Build
+        run: cmake --build build --parallel
+      - name: Live tests
+        run: ctest --test-dir build --label-regex live --output-on-failure
